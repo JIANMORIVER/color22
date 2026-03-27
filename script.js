@@ -775,6 +775,9 @@ function renderGroupSelection(t) {
     mainContent.innerHTML = `
         <div class="card">
             <h2>${t.groupSelect}</h2>
+            <p style="margin-bottom: 20px; font-weight: bold; color: #d97706; text-align: center;">
+                P.S: This survey contains Karma to get free survey responses at SurveySwap.io
+            </p>
             <div class="form-group">
                  <button class="btn secondary-btn" style="margin-bottom:1rem" onclick="selectGroup('CN')">${t.groupCN}</button>
                  <button class="btn secondary-btn" style="margin-bottom:1rem" onclick="selectGroup('UK')">${t.groupUK}</button>
