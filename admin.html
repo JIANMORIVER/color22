@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理 - 情绪色彩调研</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="admin-body">
+    <div class="app-container admin-container">
+        <header>
+            <h1>数据管理后台</h1>
+        </header>
+
+        <main id="adminContent">
+            <div id="loginPanel" class="card">
+                <h2>管理员登录</h2>
+                <div class="form-group">
+                    <label for="adminPassword">密码</label>
+                    <input type="password" id="adminPassword" placeholder="请输入管理员密码">
+                </div>
+                <button id="loginBtn" class="btn primary-btn">登录</button>
+                <p id="loginError" class="error-msg"></p>
+            </div>
+
+            <div id="dataPanel" class="hidden">
+                <div class="toolbar" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <select id="dbSelector"
+                            style="width:auto; display:inline-block; margin-right:1rem; padding:0.5rem;">
+                            <option value="SurveyResponse">Default (Legacy)</option>
+                            <option value="SurveyResponse_CN222" selected>China (CN)</option>
+                            <option value="SurveyResponse_UK222">UK</option>
+                            <option value="SurveyResponse_US222">USA</option>
+                            <option value="SurveyResponse_BW222">Botswana (BW)</option>
+                        </select>
+                        <button id="logoutBtn" class="btn secondary-btn">退出</button>
+                    </div>
+                    <button id="exportBtn" class="btn primary-btn" style="width:auto;">导出表格 (CSV)</button>
+                </div>
+                <div class="table-container">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>时间</th>
+                                <th>耗时 (s)</th>
+                                <th>姓名</th>
+                                <th>年龄</th>
+                                <th>性别</th>
+                                <th>颜色预览 (部分)</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 数据行 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+    <script>
+        AV.init({
+            appId: "XGKypYJKuSbT4XMqH2n3X50R-MdYXbMMI",
+            appKey: "vwsMa1K3uFdCmDzznzv53d89",
+            serverURL: "https://api.wayneli.online"
+        });
+    </script>
+    <script src="script.js"></script> <!-- 复用部分逻辑或单独写，为了方便我们合在一个文件里简单处理，或者我可以在头部判断路径 -->
+    <script>
+        // 内联简单的 Admin 逻辑，避免 script.js 过于复杂耦合
+        const loginPanel = document.getElementById('loginPanel');
+        const dataPanel = document.getElementById('dataPanel');
+        const loginBtn = document.getElementById('loginBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const passwordInput = document.getElementById('adminPassword');
+        const dataTableBody = document.querySelector('#dataTable tbody');
+        const loginError = document.getElementById('loginError');
+
+        const dbSelector = document.getElementById('dbSelector');
+
+        let authToken = localStorage.getItem('adminToken') || '';
+
+        if (authToken) {
+            showData();
+            fetchData();
+        }
+
+        dbSelector.addEventListener('change', () => {
+            fetchData();
+        });
+
+        loginBtn.addEventListener('click', () => {
+            if (passwordInput.value === 'admin') {
+                authToken = 'admin';
+                showData();
+                fetchData();
+            } else {
+                loginError.textContent = '密码错误 (默认密码: admin)';
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            authToken = '';
+            localStorage.removeItem('adminToken');
+            showLogin();
+        });
+
+        exportBtn.addEventListener('click', async () => {
+            try {
+                const className = dbSelector.value;
+                const query = new AV.Query(className);
+                query.descending('createdAt');
+                query.limit(1000);
+                const results = await query.find();
+
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM
+                csvContent += "ID,Time,Duration,Name,Age,Gender,Group,Colors,WordAssociations\n"; // Header
+
+                results.forEach(obj => {
+                    const item = obj.toJSON();
+                    const created = new Date(item.createdAt).toLocaleString();
+                    const duration = item.duration || 0;
+                    const info = item.user_info || {};
+                    const group = item.group || '';
+                    const colors = Object.entries(item.color_data || {}).map(([k, v]) => `${k}: ${v.hex}`).join('; ');
+
+                    // Format Word Data
+                    // item.word_data = { 'Red': [{emotion:'joy', intensity:5}, ...], ... }
+                    let wordStr = '';
+                    if (item.word_data) {
+                        wordStr = Object.entries(item.word_data).map(([word, selections]) => {
+                            // selections is array
+                            const sStr = selections.map(s => `${s.emotion}(${s.intensity})`).join(',');
+                            return `${word}:[${sStr}]`;
+                        }).join('; ');
+                    }
+
+                    const row = [
+                        item.objectId,
+                        `"${created}"`,
+                        duration,
+                        `"${info.name || ''}"`,
+                        info.age || '',
+                        info.gender || '',
+                        group,
+                        `"${colors}"`,
+                        `"${wordStr}"`
+                    ].join(",");
+                    csvContent += row + "\n";
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `${className}_data.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } catch (e) {
+                console.error(e);
+                alert('导出失败 (请检查该组是否有数据)');
+            }
+        });
+
+        function showLogin() {
+            loginPanel.classList.remove('hidden');
+            dataPanel.classList.add('hidden');
+            passwordInput.value = '';
+        }
+
+        function showData() {
+            loginPanel.classList.add('hidden');
+            dataPanel.classList.remove('hidden');
+            localStorage.setItem('adminToken', authToken);
+        }
+
+        async function fetchData() {
+            try {
+                const className = dbSelector.value;
+                const query = new AV.Query(className);
+                query.descending('createdAt');
+                const results = await query.find();
+                const data = results.map(r => {
+                    const json = r.toJSON();
+                    json.id = r.id;
+                    return json;
+                });
+                renderTable(data);
+            } catch (e) {
+                console.error(e);
+                // loginError.textContent = '获取数据失败: ' + e.message; 
+                dataTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据或加载失败 (Class Not Found)</td></tr>';
+            }
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('确定要删除这条数据吗？此操作不可恢复。')) return;
+
+            try {
+                const className = dbSelector.value;
+                const todo = AV.Object.createWithoutData(className, id);
+                await todo.destroy();
+                fetchData();
+            } catch (e) {
+                console.error(e);
+                alert('删除失败: ' + e.message);
+            }
+        }
+
+        function renderTable(data) {
+            dataTableBody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                const colors = item.color_data || {};
+                // 获取前3个颜色作为预览示例
+                const previewHtml = Object.keys(colors).slice(0, 3).map(k => {
+                    const c = colors[k];
+                    return `<span class="color-dot" style="background-color: ${c.hex}" title="${k}: ${c.hex}"></span>`;
+                }).join('');
+
+                tr.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${new Date(item.created_at).toLocaleString()}</td>
+                    <td>${item.duration || 0}</td>
+                    <td>${item.user_info.name}</td>
+                    <td>${item.user_info.age}</td>
+                    <td>${item.user_info.gender}</td>
+                    <td>${previewHtml} ...</td>
+                    <td><button class="btn secondary-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: #ef4444; border-color: #ef4444;" onclick="deleteItem('${item.id}')">删除</button></td>
+                `;
+                dataTableBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+
+</html>

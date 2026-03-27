@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情绪色彩调研</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <header id="mainHeader"
+            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid black; padding-bottom: 1rem; margin-bottom: 3rem;">
+            <h1 id="appTitle" style="margin:0;">情绪色彩调研</h1>
+            <img src="bit_logo.png" alt="BIT Logo" style="height: 86px; width: auto;">
+        </header>
+
+        <!-- Three-segment Global Progress Bar -->
+        <div class="global-progress-bar" id="globalProgressBar" style="display: none;">
+            <div class="progress-segment" id="seg-info" style="flex: 1;">
+                <div class="segment-fill" id="fill-info"></div>
+                <span class="segment-text" id="text-info">Information</span>
+            </div>
+            <div class="progress-segment" id="seg-task1" style="flex: 3;">
+                <div class="segment-fill" id="fill-task1"></div>
+                <span class="segment-text">Task 1</span>
+            </div>
+            <div class="progress-segment" id="seg-task2" style="flex: 2;">
+                <div class="segment-fill" id="fill-task2"></div>
+                <span class="segment-text">Task 2</span>
+            </div>
+        </div>
+
+        <div id="mainContent">
+            <!-- Dynamic Content -->
+        </div>
+
+        <footer
+            style="margin-top: auto; text-align: center; padding: 2rem; border-top: 1px solid #eee; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button id="fullscreenBtn" title="Toggle Fullscreen"
+                    style="padding: 0 16px; height: 36px; border-radius: 18px; border: 1px solid #ddd; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                        </path>
+                    </svg>
+                    <span id="fullscreenBtnText" style="font-size: 0.85rem; color: #666; font-weight: 500;">全屏显示</span>
+                </button>
+            </div>
+            <div style="font-size: 0.8rem; color: #999;">&copy; BIT COLOUR GROUP 2026</div>
+        </footer>
+    </div>
+
+    <!-- LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+    <script>
+        AV.init({
+            appId: "XGKypYJKuSbT4XMqH2n3X50R-MdYXbMMI",
+            appKey: "vwsMa1K3uFdCmDzznzv53d89",
+            serverURL: "https://api.wayneli.online"
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+
+</html>
