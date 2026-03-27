@@ -2247,10 +2247,9 @@ function hslToHex(h, s, l) {
 }
 
 function renderThankYou(t) {
-    mainContent.innerHTML = `
-        <div class="card" style="text-align: center;">
-            <h2>${t.thankYou}</h2>
-            <p>${t.thankYouDesc}</p>
+    let karmaHtml = '';
+    if (currentStep !== 999) {
+        karmaHtml = `
             <div style="margin-top: 2rem; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1.5rem; border-radius: 8px; text-align: left;">
                 <p style="color: #166534; font-weight: 500; margin-bottom: 0.5rem;">
                     The following code gives you Karma that can be used to get free research participants at SurveySwap.io.
@@ -2262,6 +2261,17 @@ function renderThankYou(t) {
                     Or, alternatively, enter the code manually: <strong>LETA-H5VK-CJY8</strong>
                 </p>
             </div>
+        `;
+    }
+
+    const titleText = currentStep === 999 ? (currentLang === 'en' ? 'This test has ended. We are sorry, but you are not the tester we need.' : '本次测试结束，很抱歉您不是我们需要的测试者。') : t.thankYou;
+    const descText = currentStep === 999 ? '' : t.thankYouDesc;
+
+    mainContent.innerHTML = `
+        <div class="card" style="text-align: center;">
+            <h2>${titleText}</h2>
+            ${descText ? `<p>${descText}</p>` : ''}
+            ${karmaHtml}
             <p style="margin-top: 2.5rem; color: #718096; font-size: 0.95rem;">${currentLang === 'en' ? 'Press ESC to exit full screen.' : '按 ESC 退出全屏'}</p>
         </div>
     `;
