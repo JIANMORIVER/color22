@@ -48,6 +48,7 @@ const i18n = {
         yes: '是',
         no: '否',
         gender: '性别',
+        ethnicity: '族裔',
         male: '男',
         female: '女',
         other: '其他',
@@ -169,6 +170,7 @@ const i18n = {
         yes: 'Yes',
         no: 'No',
         gender: 'Gender',
+        ethnicity: 'Ethnicity',
         male: 'Male',
         female: 'Female',
         other: 'Other',
@@ -550,6 +552,17 @@ const LANGUAGES = [
     { value: 'ms', label: 'Malay 马来语' },
     { value: 'other', label: 'Other 其他' },
     { value: 'none', label: 'None 无' }
+];
+
+const ETHNICITIES = [
+    { value: 'Asian', label: 'Asian 亚洲人' },
+    { value: 'Black', label: 'Black / African 黑人 / 非洲裔' },
+    { value: 'White', label: 'White / Caucasian 白人 / 高加索人' },
+    { value: 'Hispanic', label: 'Hispanic / Latino 西班牙裔 / 拉丁裔' },
+    { value: 'MiddleEastern', label: 'Middle Eastern / North African 中东裔 / 北非裔' },
+    { value: 'Mixed', label: 'Mixed / Multiple ethnicities 混血 / 多族裔' },
+    { value: 'PreferNotToSay', label: 'Prefer not to say 不愿透露' },
+    { value: 'Other', label: 'Other 其他' }
 ];
 
 const mainContent = document.getElementById('mainContent');
@@ -996,6 +1009,9 @@ function renderUserInfoForm(t) {
 
     const secondLangOptions = `<option value="">${t.select}</option>` +
         LANGUAGES.map(l => `<option value="${l.value}">${processLabel(l.label)}</option>`).join('');
+    
+    const ethnicityOptions = `<option value="">${t.select}</option>` +
+        ETHNICITIES.map(e => `<option value="${e.value}">${processLabel(e.label)}</option>`).join('');
 
     const detectedStr = `${t.detectedInfo}: ${displayInfo.userAgent.includes('Mobile') ? 'Mobile/Tablet' : 'Desktop'}, Gamut: ${displayInfo.colorGamut.toUpperCase()}`;
 
@@ -1041,6 +1057,12 @@ function renderUserInfoForm(t) {
                         <option value="female" ${userInfo.gender === 'female' ? 'selected' : ''}>${t.female}</option>
                         <option value="other" ${userInfo.gender === 'other' ? 'selected' : ''}>${t.other}</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ethnicity">${t.ethnicity}</label>
+                    <select id="ethnicity" required>${ethnicityOptions}</select>
+                    <input type="text" id="ethnicityOther" class="other-input" style="display:none; margin-top:0.5rem;" placeholder="${currentLang === 'zh' ? '请注明' : 'Please specify'}">
                 </div>
 
                 <!-- Nationality & Residence -->
@@ -1115,6 +1137,7 @@ function renderUserInfoForm(t) {
     setupOtherToggle('nationality', 'nationalityOther');
     setupOtherToggle('residence', 'residenceOther');
     setupOtherToggle('nativeLang', 'nativeLangOther');
+    setupOtherToggle('ethnicity', 'ethnicityOther');
 
     document.getElementById('infoForm').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -1137,6 +1160,7 @@ function renderUserInfoForm(t) {
             birth_year: birthYear,
             birth_month: document.getElementById('birthMonth').value,
             gender: document.getElementById('gender').value,
+            ethnicity: getValue('ethnicity', 'ethnicityOther'),
             nationality: getValue('nationality', 'nationalityOther'),
             residence: getValue('residence', 'residenceOther'),
             residence_duration: document.getElementById('residenceDuration').value,
